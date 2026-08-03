@@ -1,0 +1,66 @@
+import React, { createContext, useState, useContext } from 'react';
+
+// Dictionnaire des traductions
+export const translations = {
+  fr: {
+    home: 'Accueil',
+    explore: 'Découvrir',
+    live: 'Live',
+    profile: 'Profil',
+    publish: 'Publier',
+    newPost: 'Nouvelle publication',
+    selectVideo: 'Appuyer pour sélectionner une vidéo',
+    writeCaption: 'Rédiger une légende...',
+    login: 'Se connecter',
+    signup: "S'inscrire",
+    trending: 'Tendance sur Nova 🔥',
+    searchPlaceholder: 'Rechercher des utilisateurs, vidéos...',
+    changeLanguage: 'Changer la langue',
+    posts: 'Publications',
+    followers: 'Abonnés',
+    following: 'Abonnements',
+  },
+  en: {
+    home: 'Home',
+    explore: 'Explore',
+    live: 'Live',
+    profile: 'Profile',
+    publish: 'Post',
+    newPost: 'New Post',
+    selectVideo: 'Tap to select a video',
+    writeCaption: 'Write a caption...',
+    login: 'Log in',
+    signup: 'Sign up',
+    trending: 'Trending on Nova 🔥',
+    searchPlaceholder: 'Search users, videos...',
+    changeLanguage: 'Change Language',
+    posts: 'Posts',
+    followers: 'Followers',
+    following: 'Following',
+  }
+};
+
+// Contexte global pour la langue
+const LanguageContext = createContext();
+
+export const LanguageProvider = ({ children }) => {
+  const [locale, setLocale] = useState('fr'); // 'fr' par défaut
+
+  const t = (key) => {
+    return translations[locale]?.[key] || key;
+  };
+
+  const switchLanguage = (lang) => {
+    if (translations[lang]) {
+      setLocale(lang);
+    }
+  };
+
+  return (
+    <LanguageContext.Provider value={{ locale, t, switchLanguage }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = () => useContext(LanguageContext);
