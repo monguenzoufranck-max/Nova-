@@ -1,0 +1,104 @@
+import React, { useEffect, useState } from 'react';
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  Image, 
+  StyleSheet 
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { supabase } from './supabase';
+
+export default function StoryBar({ onSelectStory, onAddStory }) {
+  const [stories, setStories] = useState([]);
+
+  useEffect(() => {
+    fetchStories();
+  }, []);
+
+  const fetchStories = async () => {
+    // Récupère les stories récentes avec les infos du profil
+    const { data, error } = await supabase
+      .from('stories')
+      .select('*, profiles(username, avatar_url)')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setStories(data);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {/* Bouton pour ajouter sa propre story */}
+        <TouchableOpacity style={styles.storyItem} onPress={onAddStory}>
+          <View style={[styles.avatarContainer, styles.addBorder]}>
+            <Ionicons name="add" size={28} color="#FF2D55" />
+          </View>
+          <Text style={styles.username}>Ma story</Text>
+        </TouchableOpacity>
+
+        {/* Liste des stories des autres utilisateurs */}
+        {stories.map((item) => (
+          <TouchableOpacity 
+            key={item.id} 
+            style={styles.storyItem}
+            onPress={() => onSelectStory(item)}
+          >
+            <View style={[styles.avatarContainer, styles.storyBorder]}>
+              <Image 
+                source={{ uri: item.profiles?.avatar_url || 'https://via.placeholder.com/150' }} 
+                style={styles.avatar} 
+              />
+            </View>
+            <Text style={styles.username} numberOfLines={1}>
+              {item.profiles?.username || 'Utilisateur'}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    paddingVertical: 10,
+    paddingLeft: 10,
+    backgroundColor: '#000',
+  },
+  storyItem: {
+    alignItems: 'center',
+    marginRight: 15,
+    width: 70,
+  },
+  avatarContainer: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  storyBorder: {
+    borderWidth: 2.5,
+    borderColor: '#FF2D55', // Bordure rose/rouge dynamique
+  },
+  addBorder: {
+    borderWidth: 2,
+    borderColor: '#333',
+    backgroundColor: '#1a1a1a',
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
+  username: {
+    color: '#FFF',
+    fontSize: 11,
+    textAlign: 'center',
+  },
+});
