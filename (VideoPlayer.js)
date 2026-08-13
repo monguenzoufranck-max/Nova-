@@ -1,0 +1,8 @@
+// Ajoute ce bouton dans ton interface VideoPlayer
+<TouchableOpacity 
+  style={styles.remixButton} 
+  onPress={() => console.log("Ouvrir la caméra pour le Remix", video.id)}
+>
+  <Ionicons name="repeat" size={28} color="#FFF" />
+  <Text style={styles.actionText}>Remix</Text>
+</TouchableOpacity>
