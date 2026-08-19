@@ -18,4 +18,12 @@ export const fetchNovaFeed = async () => {
     return [];
   }
   return data;
-};
+};import 'react-native-url-polyfill/auto';
+import { createClient } from '@supabase/supabase-js';
+
+// Remplace ces valeurs par les clés fournies dans ton tableau de bord Supabase
+const SUPABASE_URL = 'https://TON_PROJET.supabase.co';
+const SUPABASE_ANON_KEY = 'TA_CLE_ANON_PUBLIC';
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
