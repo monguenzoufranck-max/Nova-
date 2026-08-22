@@ -222,5 +222,13 @@ const styles = StyleSheet.create({
   sendBtnText: { color: '#000', fontWeight: 'bold', fontSize: 18 },
   voiceBtn: { padding: 8 },
   recordingVoiceBtn: { backgroundColor: 'rgba(255, 42, 133, 0.4)', borderRadius: 20 }
-});
+});import GiftsModal from './GiftsModal';
+
+// Dans ton JSX :
+<GiftsModal 
+  visible={showGifts} 
+  onClose={() => setShowGifts(false)} 
+  receiverId="ID_DE_L_UTILISATEUR" 
+/>
+              
                               
