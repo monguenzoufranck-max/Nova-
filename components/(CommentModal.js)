@@ -1,0 +1,70 @@
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, Modal, TextInput, TouchableOpacity, FlatList } from 'react-native';
+
+export default function CommentModal({ visible, onClose }) {
+  const [comments, setComments] = useState([
+    { id: '1', user: '@alex_nova', text: 'Trop stylée cette vidéo ! 🔥' },
+    { id: '2', user: '@design_master', text: 'Le design est propre 👏' },
+  ]);
+  const [newComment, setNewComment] = useState('');
+
+  const handleAddComment = () => {
+    if (newComment.trim() === '') return;
+    setComments([...comments, { id: Date.now().toString(), user: '@mon_profil', text: newComment }]);
+    setNewComment('');
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Commentaires</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Text style={styles.closeText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={comments}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.commentItem}>
+                <Text style={styles.commentUser}>{item.user}</Text>
+                <Text style={styles.commentText}>{item.text}</Text>
+              </View>
+            )}
+          />
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Ajouter un commentaire..."
+              placeholderTextColor="#8E8E93"
+              value={newComment}
+              onChangeText={setNewComment}
+            />
+            <TouchableOpacity style={styles.sendButton} onPress={handleAddComment}>
+              <Text style={styles.sendText}>Envoyer</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  modalContent: { height: '50%', backgroundColor: '#1C1C2E', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 16 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
+  title: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  closeText: { color: '#FFF', fontSize: 18 },
+  commentItem: { marginBottom: 12 },
+  commentUser: { color: '#00F0FF', fontWeight: 'bold', fontSize: 13 },
+  commentText: { color: '#FFF', fontSize: 14, marginTop: 2 },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderColor: '#2C2C3E', paddingTop: 8 },
+  input: { flex: 1, backgroundColor: '#0F0F1A', color: '#FFF', padding: 10, borderRadius: 20, marginRight: 8 },
+  sendButton: { backgroundColor: '#00F0FF', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20 },
+  sendText: { color: '#000', fontWeight: 'bold' },
+});
