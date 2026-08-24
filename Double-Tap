@@ -1,0 +1,9 @@
+import { TapGestureHandler, State } from 'react-native-gesture-handler';
+
+// Wrapper autour du composant Video
+const onDoubleTap = (event) => {
+  if (event.nativeEvent.state === State.ACTIVE) {
+    // Déclencher la fonction handleLike
+    handleLike();
+  }
+};
