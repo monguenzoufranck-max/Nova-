@@ -1,0 +1,183 @@
+import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from 'react-native';
+import { supabase } from '../supabaseClient';
+
+export default function ChatScreen() {
+  const [messages, setMessages] = useState([]);
+  const [text, setText] = useState('');
+  const [userId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    initChat();
+  }, []);
+
+  const initChat = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setUserId(user.id);
+      fetchMessages();
+
+      // Écoute en temps réel des nouveaux messages (Supabase Realtime)
+      const channel = supabase
+        .channel('public:messages')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'messages' },
+          (payload) => {
+            setMessages((prev) => [...prev, payload.new]);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (err) {
+      console.log('Erreur chargement messages :', err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!text.trim() || !userId) return;
+
+    const messageText = text.trim();
+    setText('');
+
+    try {
+      const { error } = await supabase.from('messages').insert([
+        {
+          sender_id: userId,
+          content: messageText,
+        },
+      ]);
+
+      if (error) throw error;
+    } catch (err) {
+      console.log('Erreur envoi message :', err.message);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.headerTitle}>Discussion Globale 💬</Text>
+
+      {loading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#00F0FF" />
+        </View>
+      ) : (
+        <FlatList
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => {
+            const isMe = item.sender_id === userId;
+            return (
+              <View
+                style={[
+                  styles.messageBubble,
+                  isMe ? styles.myMessage : styles.theirMessage,
+                ]}
+              >
+                <Text style={styles.messageText}>{item.content}</Text>
+              </View>
+            );
+          }}
+          contentContainerStyle={styles.messagesList}
+        />
+      )}
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={80}
+      >
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Écrire un message..."
+            placeholderTextColor="#8E8E93"
+            value={text}
+            onChangeText={setText}
+          />
+          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+            <Text style={styles.sendButtonText}>➔</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#0F0F1A', paddingTop: 50 },
+  headerTitle: { color: '#FFF', fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  messagesList: { paddingHorizontal: 16, paddingBottom: 20 },
+  messageBubble: {
+    maxWidth: '75%',
+    padding: 12,
+    borderRadius: 16,
+    marginVertical: 4,
+  },
+  myMessage: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#00F0FF',
+    borderBottomRightRadius: 2,
+  },
+  theirMessage: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#1C1C2E',
+    borderBottomLeftRadius: 2,
+  },
+  messageText: { color: '#000', fontSize: 15 },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#1C1C2E',
+    borderTopWidth: 1,
+    borderTopColor: '#2C2C3E',
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#0F0F1A',
+    color: '#FFF',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  sendButton: {
+    backgroundColor: '#00F0FF',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendButtonText: { color: '#000', fontWeight: 'bold', fontSize: 18 },
+});
