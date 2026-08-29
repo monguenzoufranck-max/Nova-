@@ -1,0 +1,234 @@
+import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  FlatList,
+  Image,
+  Dimensions,
+  TouchableOpacity,
+  ActivityIndicator,
+  ScrollView,
+  Alert,
+} from 'react-native';
+import { Video } from 'expo-av';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '../supabaseClient';
+
+const { width } = Dimensions.get('window');
+
+export default function HomeScreen({ navigation }) {
+  const [posts, setPosts] = useState([]);
+  const [stories, setStories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    initData();
+  }, []);
+
+  const initData = async () => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUser(user);
+    await Promise.all([fetchPosts(), fetchStories()]);
+    setLoading(false);
+  };
+
+  // Récupération des posts
+  const fetchPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('id, video_url, caption, media_type, likes_count, user_id, profiles(username)')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPosts(data || []);
+    } catch (err) {
+      console.log('Erreur posts:', err.message);
+    }
+  };
+
+  // Récupération des stories des dernières 24h
+  const fetchStories = async () => {
+    try {
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from('stories')
+        .select('id, media_url, media_type, user_id, profiles(username)')
+        .gte('created_at', yesterday);
+
+      if (error) throw error;
+      setStories(data || []);
+    } catch (err) {
+      console.log('Erreur stories:', err.message);
+    }
+  };
+
+  // Ajouter une Story
+  const addStory = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]?.uri) {
+      try {
+        const uri = result.assets[0].uri;
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        const fileName = `stories/${currentUser.id}_${Date.now()}.jpg`;
+
+        const { error: uploadErr } = await supabase.storage.from('videos').upload(fileName, blob);
+        if (uploadErr) throw uploadErr;
+
+        const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(fileName);
+
+        await supabase.from('stories').insert([
+          { user_id: currentUser.id, media_url: publicUrl, media_type: 'image' },
+        ]);
+
+        Alert.alert('Story ajoutée ! 📸');
+        fetchStories();
+      } catch (err) {
+        Alert.alert('Erreur', err.message);
+      }
+    }
+  };
+
+  // Gestion du Like + Notification
+  const handleLike = async (post) => {
+    const newLikes = (post.likes_count || 0) + 1;
+    setPosts((prev) =>
+      prev.map((p) => (p.id === post.id ? { ...p, likes_count: newLikes } : p))
+    );
+
+    await supabase.from('posts').update({ likes_count: newLikes }).eq('id', post.id);
+
+    // Envoi notification au propriétaire de la publication
+    if (currentUser && post.user_id !== currentUser.id) {
+      await supabase.from('notifications').insert([
+        {
+          user_id: post.user_id,
+          sender_id: currentUser.id,
+          type: 'like',
+          post_id: post.id,
+        },
+      ]);
+    }
+  };
+
+  return (
+    <LinearGradient colors={['#0A0A12', '#121225', '#05050A']} style={styles.container}>
+      {/* En-tête NOVA */}
+      <View style={styles.topHeader}>
+        <Text style={styles.logoTitle}>NOVA 4K</Text>
+      </View>
+
+      {/* Section Stories (Rondes 3D) */}
+      <View style={styles.storiesContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 15 }}>
+          {/* Bouton Créer une Story */}
+          <TouchableOpacity style={styles.storyCircle} onPress={addStory}>
+            <View style={[styles.avatarInner, { backgroundColor: '#1C1C2E' }]}>
+              <Text style={{ color: '#00F0FF', fontSize: 24, fontWeight: 'bold' }}>+</Text>
+            </View>
+            <Text style={styles.storyUsername}>Ma Story</Text>
+          </TouchableOpacity>
+
+          {/* Liste des Stories actives */}
+          {stories.map((story) => (
+            <TouchableOpacity key={story.id} style={styles.storyCircle}>
+              <LinearGradient colors={['#FF007A', '#7000FF', '#00F0FF']} style={styles.storyGradientBorder}>
+                <Image source={{ uri: story.media_url }} style={styles.storyImage} />
+              </LinearGradient>
+              <Text style={styles.storyUsername} numberOfLines={1}>
+                {story.profiles?.username || 'User'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Fil principal */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#00F0FF" style={{ flex: 1 }} />
+      ) : (
+        <FlatList
+          data={posts}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <View style={styles.card3DContainer}>
+              <LinearGradient colors={['#1E1E38', '#14142B', '#0D0D1E']} style={styles.postCard}>
+                <View style={styles.postHeader}>
+                  <LinearGradient colors={['#00F0FF', '#FF007A']} style={styles.avatarBorder}>
+                    <View style={styles.avatarInner}>
+                      <Text style={styles.avatarText}>
+                        {item.profiles?.username ? item.profiles.username.charAt(0).toUpperCase() : '👤'}
+                      </Text>
+                    </View>
+                  </LinearGradient>
+                  <Text style={styles.author}>@{item.profiles?.username || 'utilisateur'}</Text>
+                </View>
+
+                {item.caption ? <Text style={styles.caption}>{item.caption}</Text> : null}
+
+                {item.video_url && (
+                  <View style={styles.mediaContainer3D}>
+                    {item.media_type === 'image' ? (
+                      <Image source={{ uri: item.video_url }} style={styles.mediaImage} resizeMode="cover" />
+                    ) : (
+                      <Video source={{ uri: item.video_url }} style={styles.mediaVideo} resizeMode="cover" useNativeControls isLooping />
+                    )}
+                  </View>
+                )}
+
+                <View style={styles.actionsBar}>
+                  <TouchableOpacity style={styles.actionBtn} onPress={() => handleLike(item)}>
+                    <Text style={styles.actionIcon}>❤️</Text>
+                    <Text style={styles.actionTextLike}>{item.likes_count || 0}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.actionBtn}>
+                    <Text style={styles.actionIcon}>💬</Text>
+                    <Text style={styles.actionText}>Commenter</Text>
+                  </TouchableOpacity>
+                </View>
+              </LinearGradient>
+            </View>
+          )}
+        />
+      )}
+    </LinearGradient>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, paddingTop: 45 },
+  topHeader: { alignItems: 'center', marginBottom: 10 },
+  logoTitle: { color: '#00F0FF', fontSize: 22, fontWeight: '900', letterSpacing: 3 },
+  storiesContainer: { height: 100, marginBottom: 10 },
+  storyCircle: { alignItems: 'center', marginRight: 15, width: 68 },
+  storyGradientBorder: { width: 64, height: 64, borderRadius: 32, padding: 2.5, justifyContent: 'center', alignItems: 'center' },
+  storyImage: { width: '100%', height: '100%', borderRadius: 30 },
+  storyUsername: { color: '#A0AEC0', fontSize: 11, marginTop: 4, textAlign: 'center' },
+  card3DContainer: { marginVertical: 10, marginHorizontal: 16 },
+  postCard: { borderRadius: 20, paddingVertical: 12, borderWidth: 1, borderColor: 'rgba(0, 240, 255, 0.2)' },
+  postHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, marginBottom: 8 },
+  avatarBorder: { width: 38, height: 38, borderRadius: 19, padding: 2, marginRight: 10 },
+  avatarInner: { flex: 1, backgroundColor: '#0A0A12', borderRadius: 17, justifyContent: 'center', alignItems: 'center' },
+  avatarText: { color: '#00F0FF', fontWeight: 'bold' },
+  author: { color: '#FFF', fontWeight: 'bold' },
+  caption: { color: '#E2E8F0', paddingHorizontal: 14, marginBottom: 8 },
+  mediaContainer3D: { width: '100%', height: 300, backgroundColor: '#000' },
+  mediaImage: { width: '100%', height: '100%' },
+  mediaVideo: { width: '100%', height: '100%' },
+  actionsBar: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 10, marginTop: 6, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  actionIcon: { fontSize: 18 },
+  actionText: { color: '#A0AEC0' },
+  actionTextLike: { color: '#FF007A', fontWeight: 'bold' },
+});
