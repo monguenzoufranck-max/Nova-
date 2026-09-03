@@ -1,0 +1,11 @@
+<Tab.Screen 
+  name="PulseMap" 
+  component={PulseMapScreen} 
+  options={{
+    tabBarLabel: 'Pulse Map',
+    tabBarIcon: ({ color, size }) => (
+      // Si tu utilises Ionicons ou Lucide
+      <Ionicons name="planet-outline" size={size} color={color} />
+    ),
+  }}
+/>
