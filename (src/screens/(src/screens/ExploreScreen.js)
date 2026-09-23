@@ -1,0 +1,127 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  View, Text, StyleSheet, TextInput, FlatList, 
+  TouchableOpacity, Image, Dimensions 
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../supabaseClient';
+
+const { width } = Dimensions.get('window');
+
+export default function ExploreScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [trendingVideos, setTrendingVideos] = useState([]);
+
+  useEffect(() => {
+    fetchTrending();
+  }, []);
+
+  // Recherche d'utilisateurs par pseudo
+  const handleSearch = async (text) => {
+    setSearchQuery(text);
+    if (!text.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .ilike('username', `%${text}%`);
+
+    if (!error) {
+      setSearchResults(data || []);
+    }
+  };
+
+  // Chargement des vidéos les plus aimées (Tendances)
+  const fetchTrending = async () => {
+    const { data, error } = await supabase
+      .from('videos')
+      .select('*, profiles(username)')
+      .order('likes_count', { ascending: false })
+      .limit(10);
+
+    if (!error) {
+      setTrendingVideos(data || []);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Barre de recherche */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search" size={20} color="#888" style={{ marginRight: 10 }} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Rechercher des créateurs ou mots-clés..."
+          placeholderTextColor="#888"
+          value={searchQuery}
+          onChangeText={handleSearch}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => handleSearch('')}>
+            <Ionicons name="close-circle" size={18} color="#888" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Résultats de recherche ou Tendances */}
+      {searchQuery.length > 0 ? (
+        <FlatList
+          data={searchResults}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.userResultItem}>
+              <Image 
+                source={{ uri: item.avatar_url || 'https://via.placeholder.com/50' }} 
+                style={styles.resultAvatar} 
+              />
+              <Text style={styles.resultUsername}>@{item.username}</Text>
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>Aucun utilisateur trouvé</Text>
+          }
+        />
+      ) : (
+        <View style={{ flex: 1 }}>
+          <Text style={styles.sectionTitle}>Tendances du moment 🔥</Text>
+          <FlatList
+            data={trendingVideos}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <TouchableOpacity style={styles.trendingCard}>
+                <View style={styles.cardCover}>
+                  <Ionicons name="flame" size={24} color="#FF2D55" />
+                  <Text style={styles.cardLikes}>{item.likes_count || 0} likes</Text>
+                </View>
+                <Text style={styles.cardUser}>@{item.profiles?.username}</Text>
+                <Text style={styles.cardDesc} numberOfLines={1}>{item.description}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#000', paddingTop: 50, paddingHorizontal: 15 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E1E1E', borderRadius: 25, paddingHorizontal: 15, paddingVertical: 10, marginBottom: 20 },
+  searchInput: { flex: 1, color: '#FFF', fontSize: 14 },
+  sectionTitle: { color: '#FFF', fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
+  userResultItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#1A1A1A' },
+  resultAvatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12, backgroundColor: '#333' },
+  resultUsername: { color: '#FFF', fontSize: 15, fontWeight: '600' },
+  trendingCard: { width: width * 0.4, height: 220, backgroundColor: '#141414', borderRadius: 12, marginRight: 12, padding: 10, justifyContent: 'space-between' },
+  cardCover: { flex: 1, backgroundColor: '#222', borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
+  cardLikes: { color: '#FFF', fontSize: 12, marginTop: 4, fontWeight: 'bold' },
+  cardUser: { color: '#FFF', fontWeight: 'bold', fontSize: 13 },
+  cardDesc: { color: '#888', fontSize: 12 },
+  emptyText: { color: '#666', textAlign: 'center', marginTop: 30 }
+});
