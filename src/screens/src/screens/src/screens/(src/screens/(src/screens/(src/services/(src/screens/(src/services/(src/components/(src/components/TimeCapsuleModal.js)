@@ -1,0 +1,90 @@
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, Modal, TouchableOpacity, TextInput } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+
+export default function TimeCapsuleModal({ visible, onClose, onLockCapsule }) {
+  const [unlockDays, setUnlockDays] = useState('7');
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={styles.overlay}>
+        <View style={styles.card}>
+          <Ionicons name="time" size={40} color="#00E5FF" style={styles.icon} />
+          <Text style={styles.title}>Créer une Capsule NOVA</Text>
+          <Text style={styles.subtitle}>
+            Verrouillez cette vidéo à votre position actuelle.
+          </Text>
+
+          <Text style={styles.label}>Déverrouillage dans (jours) :</Text>
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            value={unlockDays}
+            onChangeText={setUnlockDays}
+          />
+
+          <TouchableOpacity 
+            style={styles.btnWrapper} 
+            onPress={() => onLockCapsule(unlockDays)}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#00E5FF', '#0088FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.btn}
+            >
+              <Text style={styles.btnText}>Sceller la Capsule 🔒</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <Text style={styles.closeText}>Annuler</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  card: {
+    backgroundColor: '#121212',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
+  },
+  icon: { marginBottom: 10 },
+  title: { color: '#FFF', fontSize: 20, fontWeight: 'bold', marginBottom: 6 },
+  subtitle: { color: '#AAA', fontSize: 13, textAlign: 'center', marginBottom: 20 },
+  label: { color: '#FFF', alignSelf: 'flex-start', marginBottom: 8, fontSize: 13 },
+  input: {
+    backgroundColor: '#1E1E1E',
+    color: '#00E5FF',
+    width: '100%',
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  btnWrapper: { width: '100%', borderRadius: 12, overflow: 'hidden' },
+  btn: { paddingVertical: 14, alignItems: 'center' },
+  btnText: { color: '#FFF', fontWeight: 'bold', fontSize: 15 },
+  closeBtn: { marginTop: 15 },
+  closeText: { color: '#888', fontSize: 13 },
+});
