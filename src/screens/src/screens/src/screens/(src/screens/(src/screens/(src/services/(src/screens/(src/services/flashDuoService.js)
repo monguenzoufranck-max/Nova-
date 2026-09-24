@@ -1,0 +1,31 @@
+import * as Location from 'expo-location';
+import { supabase } from '../supabaseClient';
+
+export async function checkNearbyCreators(userId) {
+  try {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return null;
+
+    let { coords } = await Location.getCurrentPositionAsync({});
+
+    // Mise à jour de la position actuelle de l'utilisateur dans Supabase
+    await supabase.from('profiles').update({
+      last_latitude: coords.latitude,
+      last_longitude: coords.longitude,
+      last_active: new Date(),
+    }).eq('id', userId);
+
+    // Récupérer les créateurs actifs à proximité
+    const { data, error } = await supabase.rpc('get_nearby_creators', {
+      user_lat: coords.latitude,
+      user_long: coords.longitude,
+      radius_km: 2.0,
+    });
+
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.log('Erreur Flash Duo:', err.message);
+    return [];
+  }
+}
