@@ -1,0 +1,145 @@
+import React, { useState } from 'react';
+import { 
+  StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator 
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../supabaseClient';
+
+export default function AuthScreen({ navigation }) {
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleAuth = async () => {
+    if (!email || !password) {
+      return Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
+    }
+
+    setLoading(true);
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        Alert.alert('Succès', 'Vérifiez votre boîte mail pour valider votre compte !');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        navigation.replace('Accueil');
+      }
+    } catch (err) {
+      Alert.alert('Erreur', err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.logoText}>NOVA</Text>
+      <Text style={styles.subtitle}>Rejoignez la communauté vidéo 3D</Text>
+
+      <View style={styles.inputBox}>
+        <Ionicons name="mail-outline" size={20} color="#888" style={{ marginRight: 10 }} />
+        <TextInput
+          style={styles.input}
+          placeholder="Adresse e-mail"
+          placeholderTextColor="#666"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+        />
+      </View>
+
+      <View style={styles.inputBox}>
+        <Ionicons name="lock-closed-outline" size={20} color="#888" style={{ marginRight: 10 }} />
+        <TextInput
+          style={styles.input}
+          placeholder="Mot de passe"
+          placeholderTextColor="#666"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+      </View>
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#FF2D55" style={{ marginTop: 20 }} />
+      ) : (
+        <TouchableOpacity style={styles.btnWrapper} onPress={handleAuth} activeOpacity={0.85}>
+          <LinearGradient
+            colors={['#FF5E7E', '#FF2D55']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.btn}
+          >
+            <Text style={styles.btnText}>{isSignUp ? "S'inscrire" : 'Se connecter'}</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
+
+      <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)} style={{ marginTop: 20 }}>
+        <Text style={styles.switchText}>
+          {isSignUp ? 'Déjà un compte ? Connectez-vous' : "Pas encore de compte ? S'inscrire"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 25,
+  },
+  logoText: {
+    color: '#FF2D55',
+    fontSize: 42,
+    fontWeight: 'bold',
+    letterSpacing: 4,
+  },
+  subtitle: {
+    color: '#AAA',
+    fontSize: 14,
+    marginBottom: 40,
+  },
+  inputBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+    borderWidth: 1,
+    borderColor: '#222',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    height: 50,
+    width: '100%',
+    marginBottom: 15,
+  },
+  input: {
+    flex: 1,
+    color: '#FFF',
+  },
+  btnWrapper: {
+    width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginTop: 10,
+  },
+  btn: {
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  btnText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  switchText: {
+    color: '#FF2D55',
+    fontSize: 13,
+  },
+});
