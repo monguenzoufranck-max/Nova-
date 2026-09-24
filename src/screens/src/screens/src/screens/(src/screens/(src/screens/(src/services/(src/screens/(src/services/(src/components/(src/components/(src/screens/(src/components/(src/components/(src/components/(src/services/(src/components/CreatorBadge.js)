@@ -1,0 +1,42 @@
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+export default function CreatorBadge({ level = 'Trendsetter' }) {
+  const getBadgeConfig = () => {
+    switch (level) {
+      case 'Legend':
+        return { color: '#FFD700', icon: 'trophy', label: 'LÉGENDE 👑' };
+      case 'Trendsetter':
+        return { color: '#FF2D55', icon: 'flame', label: 'TRENDSETTER 🔥' };
+      default:
+        return { color: '#00E5FF', icon: 'sparkles', label: 'ROOKIE ✨' };
+    }
+  };
+
+  const config = getBadgeConfig();
+
+  return (
+    <View style={[styles.badgeContainer, { borderColor: config.color }]}>
+      <Ionicons name={config.icon} size={12} color={config.color} />
+      <Text style={[styles.badgeText, { color: config.color }]}>{config.label}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  badgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 4,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+});
