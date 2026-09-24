@@ -1,0 +1,175 @@
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, Image, FlatList, TouchableOpacity, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../supabaseClient';
+
+const { width } = Dimensions.get('window');
+const COLUMN_SIZE = width / 3;
+
+export default function ProfileScreen() {
+  const [userVideos, setUserVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserVideos();
+  }, []);
+
+  const fetchUserVideos = async () => {
+    try {
+      const user = supabase.auth.user();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUserVideos(data || []);
+    } catch (err) {
+      console.log(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* En-tête du Profil */}
+      <View style={styles.header}>
+        <View style={styles.avatarBorder}>
+          <Image 
+            source={{ uri: 'https://via.placeholder.com/150' }} 
+            style={styles.avatar} 
+          />
+        </View>
+        <Text style={styles.username}>@amenia_nova</Text>
+        <Text style={styles.bio}>Fondateur de NOVA 🚀 | Créateur de contenu</Text>
+
+        {/* Statistiques Profil */}
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>12.5K</Text>
+            <Text style={styles.statLabel}>Abonnés</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>450</Text>
+            <Text style={styles.statLabel}>Abonnements</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>98.4K</Text>
+            <Text style={styles.statLabel}>J'aime</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Barre d'onglets Profil */}
+      <View style={styles.tabBar}>
+        <Ionicons name="grid-outline" size={22} color="#FF2D55" />
+      </View>
+
+      {/* Grille des vidéos de l'utilisateur */}
+      <FlatList
+        data={userVideos}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={3}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.gridItem} activeOpacity={0.8}>
+            <View style={styles.videoThumbnail}>
+              <Ionicons name="play" size={20} color="#FFF" />
+            </View>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>Aucune vidéo publiée pour le moment.</Text>
+        }
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+    paddingTop: 50,
+  },
+  header: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  avatarBorder: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 2,
+    borderColor: '#FF2D55',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  avatar: {
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+  },
+  username: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  bio: {
+    color: '#AAA',
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#1A1A1A',
+    paddingVertical: 12,
+  },
+  statBox: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  statLabel: {
+    color: '#666',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  tabBar: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: '#1A1A1A',
+  },
+  gridItem: {
+    width: COLUMN_SIZE,
+    height: COLUMN_SIZE * 1.3,
+    padding: 1,
+  },
+  videoThumbnail: {
+    flex: 1,
+    backgroundColor: '#1E1E1E',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 40,
+    fontSize: 14,
+  },
+});
