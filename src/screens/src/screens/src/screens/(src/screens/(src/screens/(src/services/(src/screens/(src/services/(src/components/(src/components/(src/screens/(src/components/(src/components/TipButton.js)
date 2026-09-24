@@ -1,0 +1,81 @@
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+
+export default function TipButton({ creatorName }) {
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const amounts = [500, 1000, 2500, 5000];
+
+  const handleSendTip = (amount) => {
+    setModalVisible(false);
+    Alert.alert("Succès !", `Vous avez envoyé ${amount} FCFA à ${creatorName} 🚀`);
+  };
+
+  return (
+    <View>
+      <TouchableOpacity onPress={() => setModalVisible(true)} activeOpacity={0.8}>
+        <LinearGradient colors={['#FFD700', '#FF8C00']} style={styles.tipBtn}>
+          <Ionicons name="cash" size={18} color="#000" />
+          <Text style={styles.tipText}>Soutenir</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+
+      <Modal visible={modalVisible} transparent animationType="fade">
+        <View style={styles.overlay}>
+          <View style={styles.card}>
+            <Text style={styles.title}>Soutenir {creatorName}</Text>
+            <Text style={styles.subtitle}>Choisissez un montant de pourboire direct :</Text>
+
+            <View style={styles.grid}>
+              {amounts.map((amt) => (
+                <TouchableOpacity 
+                  key={amt} 
+                  style={styles.amountBox}
+                  onPress={() => handleSendTip(amt)}
+                >
+                  <Text style={styles.amountText}>{amt} FCFA</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
+              <Text style={styles.closeText}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  tipBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 6,
+  },
+  tipText: { color: '#000', fontWeight: 'bold', fontSize: 13 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center' },
+  card: { backgroundColor: '#181824', borderRadius: 20, padding: 20, width: '85%', alignItems: 'center' },
+  title: { color: '#FFF', fontSize: 18, fontWeight: 'bold', marginBottom: 6 },
+  subtitle: { color: '#AAA', fontSize: 13, marginBottom: 20 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginBottom: 15 },
+  amountBox: {
+    backgroundColor: '#262636',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFD700',
+    width: '42%',
+    alignItems: 'center',
+  },
+  amountText: { color: '#FFD700', fontWeight: 'bold', fontSize: 15 },
+  closeBtn: { marginTop: 10 },
+  closeText: { color: '#888' },
+});
