@@ -1,0 +1,33 @@
+import { supabase } from '../supabaseClient';
+
+// 1. Envoyer un pourboire
+export async function sendCreatorTip(senderId, creatorId, amount) {
+  const { data, error } = await supabase.rpc('process_tip', {
+    sender_id: senderId,
+    creator_id: creatorId,
+    tip_amount: amount,
+  });
+  if (error) throw error;
+  return data;
+}
+
+// 2. Récupérer les badges d'un créateur
+export async function getUserBadges(userId) {
+  const { data, error } = await supabase
+    .from('user_badges')
+    .select('*')
+    .eq('user_id', userId);
+  if (error) console.log(error.message);
+  return data || [];
+}
+
+// 3. Récupérer les stories d'un quartier
+export async function getSquadStories(neighborhoodName) {
+  const { data, error } = await supabase
+    .from('squad_stories')
+    .select('*')
+    .eq('neighborhood', neighborhoodName)
+    .order('created_at', { ascending: false });
+  if (error) console.log(error.message);
+  return data || [];
+}
