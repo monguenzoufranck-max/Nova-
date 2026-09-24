@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "NOVA",
+    "slug": "nova-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.amenia.nova",
+      "infoPlist": {
+        "NSCameraUsageDescription": "NOVA a besoin d'accéder à la caméra pour enregistrer vos vidéos.",
+        "NSMicrophoneUsageDescription": "NOVA a besoin d'accéder au microphone pour capturer le son."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.amenia.nova",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    }
+  }
+}
