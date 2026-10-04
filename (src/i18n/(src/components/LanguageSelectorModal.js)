@@ -1,0 +1,86 @@
+import React from 'react';
+import { StyleSheet, Text, View, Modal, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+
+const LANGUAGES = [
+  { code: 'fr', name: 'Français 🇫🇷' },
+  { code: 'ln', name: 'Lingála 🇨🇬' },
+  { code: 'en', name: 'English 🇺🇸' },
+];
+
+export default function LanguageSelectorModal({ visible, onClose }) {
+  const { i18n, t } = useTranslation();
+
+  const changeLang = (code) => {
+    i18n.changeLanguage(code);
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.header}>
+            <Text style={styles.title}>{t('language')}</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+
+          {LANGUAGES.map((item) => (
+            <TouchableOpacity
+              key={item.code}
+              style={[
+                styles.langRow,
+                i18n.language === item.code && styles.selectedRow
+              ]}
+              onPress={() => changeLang(item.code)}
+            >
+              <Text style={styles.langName}>{item.name}</Text>
+              {i18n.language === item.code && (
+                <Ionicons name="checkmark-circle" size={20} color="#FF2D55" />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#121212',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  title: { color: '#FFF', fontWeight: 'bold', fontSize: 18 },
+  langRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#1E1E1E',
+    marginBottom: 10,
+  },
+  selectedRow: {
+    borderWidth: 1,
+    borderColor: '#FF2D55',
+  },
+  langName: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+});
