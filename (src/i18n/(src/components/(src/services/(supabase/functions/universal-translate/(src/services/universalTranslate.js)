@@ -1,0 +1,23 @@
+import { supabase } from '../lib/supabaseClient';
+
+/**
+ * Traduit un texte vers N'IMPORTE QUELLE langue du monde
+ * @param {string} text - Le texte d'origine
+ * @param {string} targetLangCode - Le code ISO de la langue cible (ex: 'zh', 'es', 'ln')
+ */
+export async function translateToAnyLanguage(text, targetLangCode) {
+  try {
+    const { data, error } = await supabase.functions.invoke('universal-translate', {
+      body: { 
+        text: text, 
+        target_lang: targetLangCode 
+      }
+    });
+
+    if (error) throw error;
+    return data.translatedText;
+  } catch (err) {
+    console.error('Erreur traduction universelle:', err.message);
+    return text;
+  }
+}
