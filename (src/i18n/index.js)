@@ -1,0 +1,85 @@
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const resources = {
+  fr: {
+    translation: {
+      welcome: "Bienvenue sur NOVA",
+      feed: "Pour toi",
+      nearby: "À proximité",
+      following: "Abonnements",
+      comments: "Commentaires",
+      addComment: "Ajouter un commentaire...",
+      live: "EN DIRECT",
+      tip: "Soutenir",
+      language: "Langue de l'application",
+    }
+  },
+  ln: {
+    translation: {
+      welcome: "Boyei bolamu na NOVA",
+      feed: "Pona yo",
+      nearby: "Penepene",
+      following: "Okolandaka",
+      comments: "Makanisi",
+      addComment: "Bakisa likanisi...",
+      live: "AZALI EBONGA",
+      tip: "Pesela makabo",
+      language: "Lokota ya bopesi",
+    }
+  },
+  en: {
+    translation: {
+      welcome: "Welcome to NOVA",
+      feed: "For You",
+      nearby: "Nearby",
+      following: "Following",
+      comments: "Comments",
+      addComment: "Add a comment...",
+      live: "LIVE",
+      tip: "Support",
+      language: "App Language",
+    }
+  }
+};
+
+const LANGUAGE_KEY = '@nova_app_language';
+
+const languageDetector = {
+  type: 'languageDetector',
+  async: true,
+  detect: async (callback) => {
+    try {
+      const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
+      if (savedLanguage) {
+        return callback(savedLanguage);
+      }
+    } catch (error) {
+      console.log('Erreur lecture langue:', error);
+    }
+    callback('fr'); // Langue par défaut
+  },
+  init: () => {},
+  cacheUserLanguage: async (lng) => {
+    try {
+      await AsyncStorage.setItem(LANGUAGE_KEY, lng);
+    } catch (error) {
+      console.log('Erreur sauvegarde langue:', error);
+    }
+  }
+};
+
+i18n
+  .use(languageDetector)
+  .use(initReactI18next)
+  .init({
+    compatibilityJSON: 'v3',
+    resources,
+    fallbackLng: 'fr',
+    interpolation: {
+      escapeValue: false,
+    }
+  });
+
+export default i18n;
