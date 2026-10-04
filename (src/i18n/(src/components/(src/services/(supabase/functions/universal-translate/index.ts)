@@ -1,0 +1,32 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+
+serve(async (req) => {
+  const { text, target_lang } = await req.json()
+
+  // Appel à un modèle IA universel de traduction
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `Tu es le moteur de traduction universel de l'application NOVA. Traduis le texte fourni dans la langue correspondant au code ISO "${target_lang}". Conserve le ton dynamique et naturel.`
+        },
+        { role: 'user', content: text }
+      ],
+    }),
+  })
+
+  const data = await response.json()
+  const translatedText = data.choices[0].message.content
+
+  return new Response(
+    JSON.stringify({ translatedText }),
+    { headers: { "Content-Type": "application/json" } },
+  )
+})
