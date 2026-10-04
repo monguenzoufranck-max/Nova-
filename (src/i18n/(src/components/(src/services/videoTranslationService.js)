@@ -1,0 +1,16 @@
+import { supabase } from '../lib/supabaseClient';
+
+export async function translateVideoCaption(text, targetLang) {
+  try {
+    // Appel d'une Edge Function Supabase ou d'une API de traduction
+    const { data, error } = await supabase.functions.invoke('translate-text', {
+      body: { text, target_lang: targetLang }
+    });
+
+    if (error) throw error;
+    return data.translatedText;
+  } catch (err) {
+    console.log('Erreur traduction vidéo:', err.message);
+    return text; // Retourne le texte d'origine en cas d'erreur
+  }
+}
