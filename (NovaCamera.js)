@@ -1,0 +1,46 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react me-native';
+import * as Haptics from 'expo-haptics';
+
+export default function NovaCamera({ locationName = "Centre-Ville" }) {
+  const [isRecording, setIsRecording] = useState(false);
+
+  const toggleRecord = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setIsRecording(!isRecording);
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Visualisation vidéo avec cadre Cyberpunk */}
+      <View style={styles.cameraPreview}>
+        <View style={styles.cyberOverlay}>
+          <Text style={styles.locationBadge}>📍 {locationName.toUpperCase()}</Text>
+          <Text style={styles.watermark}>NOVA 3D LIVE</Text>
+        </View>
+
+        {isRecording && <View style={styles.recIndicator} />}
+      </View>
+
+      {/* Bouton de capture */}
+      <TouchableOpacity 
+        style={[styles.recordButton, isRecording && styles.recordingActive]} 
+        onPress={toggleRecord}
+      >
+        <View style={styles.innerButton} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.StyleSheet ? StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+  cameraPreview: { width: '90%', height: '70%', borderRadius: 20, borderWidth: 2, borderColor: '#00F0FF', overflow: 'hidden', justifyContent: 'space-between', padding: 15 },
+  cyberOverlay: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  locationBadge: { color: '#00F0FF', backgroundColor: 'rgba(0, 240, 255, 0.2)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, fontWeight: 'bold' },
+  watermark: { color: '#FF007F', fontWeight: '900', letterSpacing: 1.5 },
+  recIndicator: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#FF0000', alignSelf: 'flex-end' },
+  recordButton: { width: 80, height: 80, borderRadius: 40, borderWidth: 4, borderColor: '#00F0FF', justifyContent: 'center', alignItems: 'center', marginTop: 20 },
+  recordingActive: { borderColor: '#FF007F' },
+  innerButton: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#00F0FF' }
+}) : {};
