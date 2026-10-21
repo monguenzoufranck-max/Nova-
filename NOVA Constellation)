@@ -1,0 +1,27 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+export default function NovaConstellation({ topCreators = [] }) {
+  return (
+    <View style={styles.skyContainer}>
+      <Text style={styles.skyTitle}>✨ CONSTELLATION NOVA</Text>
+      <View style={styles.starsGrid}>
+        {topCreators.map((creator, index) => (
+          <View key={index} style={styles.starPoint}>
+            <Text style={styles.starIcon}>⭐</Text>
+            <Text style={styles.starName}>{creator.name}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  skyContainer: { padding: 20, backgroundColor: '#0B0C10', borderRadius: 16, borderBottomWidth: 2, borderColor: '#00F0FF' },
+  skyTitle: { color: '#00F0FF', fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 15 },
+  starsGrid: { flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap' },
+  starPoint: { alignItems: 'center', margin: 8 },
+  starIcon: { fontSize: 24 },
+  starName: { color: '#FFF', fontSize: 11, marginTop: 4 }
+});
