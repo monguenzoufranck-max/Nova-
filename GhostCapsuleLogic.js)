@@ -1,0 +1,18 @@
+// Vérifie si la capsule mystère est active selon l'heure courante
+export function isGhostCapsuleActive(activeFrom, activeUntil) {
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const [fromH, fromM] = activeFrom.split(':').map(Number);
+  const [untilH, untilM] = activeUntil.split(':').map(Number);
+
+  const startMinutes = fromH * 60 + fromM;
+  const endMinutes = untilH * 60 + untilM;
+
+  if (startMinutes <= endMinutes) {
+    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+  } else {
+    // Cas où la capsule est active à cheval sur minuit (ex: 23h à 02h)
+    return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
+  }
+}
