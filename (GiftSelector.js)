@@ -1,0 +1,39 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
+
+const GIFTS = [
+  { id: 'neon_flash', name: '⚡ Éclair', xp: 10 },
+  { id: 'gold_capsule', name: '📦 Capsule d\'Or', xp: 50 },
+  { id: 'nova_crown', name: '👑 Couronne', xp: 100 },
+];
+
+export default function GiftSelector({ onSendGift }) {
+  const handleGiftSelect = (gift) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (onSendGift) onSendGift(gift);
+  };
+
+  return (
+    <View style={styles.giftContainer}>
+      <Text style={styles.title}>Envoyer un Cadeau NOVA</Text>
+      <View style={styles.giftList}>
+        {GIFTS.map((gift) => (
+          <TouchableOpacity key={gift.id} style={styles.giftCard} onPress={() => handleGiftSelect(gift)}>
+            <Text style={styles.giftName}>{gift.name}</Text>
+            <Text style={styles.giftXp}>+{gift.xp} XP</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.StyleSheet ? StyleSheet.create({
+  giftContainer: { padding: 15, backgroundColor: '#121212', borderRadius: 15 },
+  title: { color: '#FFF', fontSize: 16, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
+  giftList: { flexDirection: 'row', justifyContent: 'space-around' },
+  giftCard: { backgroundColor: '#1E1E2E', padding: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: '#00F0FF' },
+  giftName: { color: '#FFF', fontWeight: '600' },
+  giftXp: { color: '#00F0FF', fontSize: 12, marginTop: 4 }
+}) : {};
